@@ -1,0 +1,9 @@
+path: .
+train: images/train
+names:
+  0: clear_sky
+  1: clouds
+  2: sunset_sunrise
+  3: night_sky_stars
+  4: fog_mist_haze
+  5: rainbow_lightning
