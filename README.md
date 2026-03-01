@@ -1,135 +1,185 @@
-# Sky & Atmospheric Phenomena Analyzer
+# Sky Atmosphere Analyzer
 
-## Context
+A full-stack application that analyzes sky images to detect atmospheric phenomena using YOLO-based computer vision. The frontend is React + Vite + TypeScript with Tailwind CSS. The backend is Python FastAPI with Ultralytics YOLO.
 
-Build a small full-stack application that analyzes an image and returns **Sky & Atmospheric Phenomena** tags using a YOLO-based computer vision approach.
+## Features
 
-You will implement:
-
-- a backend service (Python or Go)
-- a REST API that you design and document
-- a React UI that uploads an image and displays results
-
-AI coding tools are allowed.
-
----
-
-## What we are building
-
-### Computer Vision (YOLO)
-
-Use a YOLO library to produce predictions from an image.
-
-You may choose one approach:
-
-- **Inference-first:** use an existing YOLO model and map outputs to the taxonomy below
-- **Mini fine-tune (optional):** fine-tune a small YOLO model on the provided dataset
-
-Accuracy is not the main focus. Reasoning and engineering decisions matter more.
-
----
+- **Image Upload**: Drag-and-drop or select images for analysis
+- **Real-time Analysis**: YOLO-based classification with fast inference
+- **Fallback Strategy**: 4-level fallback system ensures always returns a result
+- **History**: Paginated results history with fallback method indicators
 
 ## Taxonomy
 
-All predictions must map into:
-
-**Group label:** `atmosphere`
-
-Required labels:
-- clear_sky
-- clouds
-- sunset_sunrise
-- night_sky_stars
-- fog_mist_haze
-- rainbow_lightning
-
-You may introduce additional sublabels, but the labels above must be supported.
+All predictions map to these labels:
+- `clear_sky`
+- `clouds`
+- `sunset_sunrise`
+- `night_sky_stars`
+- `fog_mist_haze`
+- `rainbow_lightning`
 
 ---
 
-## Frontend (React)
+## Quick Start
 
-A minimal React + Vite project is provided.
-To get the client running:
+### Prerequisites
+
+- Node.js 18+ and npm (for frontend)
+- Python 3.11+ (for backend)
+- Docker & Docker Compose (for containerized deployment)
+
+### Local Development
+
+#### Backend
+
+```bash
+cd server
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate  # Windows
+
+# Install dependencies
+pip install -e .
+
+# Run development server
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+The API will be available at `http://localhost:8000`
+
+#### Frontend
 
 ```bash
 cd client
-npm install        # or yarn
-npm run dev         # start Vite development server
-```
-Expected functionality:
-- image upload UI
-- results view (tags + confidence)
-- loading and error states
-- optional annotated preview
 
-Styling is not the focus.
+# Install dependencies
+npm install
 
----
-
-## Backend
-
-Implement a backend service that:
-
-- accepts an image upload
-- runs a CV pipeline
-- returns a JSON response of your design
-- documents API and architecture decisions in the README
-
-Guidelines:
-
-- REST API
-- clear project structure
-- reasonable validation and error handling
-- explain how you would productionize it
-
-Constraints:
-
-- No authentication required
-- Persistence is optional
-
-### Backend guidance
-
-You may pick **Python or Go**; a simple `server/README.md` should include the commands needed to bootstrap and start the service. A conventional layout looks like:
-
-```
-server/
-  app.py            # or main.go
-  requirements.txt  # or go.mod/go.sum
-  handlers/         # request handlers/controllers
-  models/           # any training/inference code
-  utils/            # shared helpers
+# Run development server
+npm run dev
 ```
 
+The UI will be available at `http://localhost:5173`
 
 ---
 
-## Dataset
+## Configuration
 
-A small YOLO-format dataset is included under:
+### Environment Variables
 
-`assets/dataset/`
+#### Backend (.env)
 
-*Image source:* the training images were taken from the SkyFinder dataset: https://cs.valdosta.edu/~rpmihail/skyfinder/
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MAX_FILE_SIZE_MB` | 5 | Maximum upload file size |
+| `ALLOWED_MIME_TYPES` | image/jpeg,image/png | Allowed file types |
+| `CONFIDENCE_THRESHOLD` | 0.1 | Min confidence for predictions |
+| `DEFAULT_MODEL` | yolov8n-cls | YOLO model to use |
+| `LOG_LEVEL` | INFO | Logging level |
+| `CORS_ORIGINS` | * | CORS allowed origins |
 
-You may use it for fine-tuning, experimentation, or ignore it if you prefer an inference-first approach.
+#### Frontend
 
----
-
-## Deliverables
-
-Update this repository with:
-
-- your implementation
-- documentation explaining:
-  - how to run
-  - your API design
-  - architecture overview
-  - CV approach
-  - limitations and next steps
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VITE_BACKEND_URL` | http://localhost:8000 | Backend API URL |
 
 ---
 
-## Notes
+## API Endpoints
 
-If something is unclear, make a reasonable assumption and document it.
+### POST /api/v1/analyze
+
+Upload an image for atmospheric analysis.
+
+```bash
+curl -X POST http://localhost:8000/api/v1/analyze \
+  -F "file=@sky.jpg"
+```
+
+Response:
+```json
+{
+  "id": "uuid-string",
+  "timestamp": "2024-01-01T12:00:00Z",
+  "original_filename": "sky.jpg",
+  "group": "atmosphere",
+  "predictions": [
+    {"label": "clouds", "confidence": 0.87},
+    {"label": "clear_sky", "confidence": 0.45}
+  ],
+  "processing_time_ms": 142,
+  "fallback_method": null
+}
+```
+
+### GET /api/v1/results
+
+Get paginated analysis history.
+
+```bash
+curl "http://localhost:8000/api/v1/results?page=1&page_size=20"
+```
+
+### GET /health
+
+Health check endpoint.
+
+```bash
+curl http://localhost:8000/health
+```
+
+---
+
+## Production Deployment
+
+### Docker Compose
+
+The easiest way to run the full stack:
+
+```bash
+docker-compose up --build
+```
+
+- Frontend: http://localhost:80
+- Backend API: http://localhost:8000
+
+### Manual Production Build
+
+#### Backend
+
+```bash
+cd server
+docker build -f server/Dockerfile -t sky-analyzer-server .
+docker run -p 8000:8000 sky-analyzer-server
+```
+
+#### Frontend
+
+```bash
+cd client
+npm install
+npm run build
+# Serve dist/ with nginx or any static file server
+```
+
+---
+
+## Testing
+
+### Backend Tests
+
+```bash
+cd server
+source venv/bin/activate
+pip install pytest pytest-asyncio
+pytest tests/ -v
+```
+
+33 tests covering:
+- Taxonomy mapping and fallback strategy
+- Storage service
+- Validation utilities

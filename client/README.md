@@ -8,6 +8,7 @@ This folder contains the **frontend** application for the Sky Atmosphere Analyze
 - Tailwind CSS utility-first styling
 - Layout component with mobile-friendly sidebar
 - API service for inference and results
+- Pagination support for results history
 
 ## Getting Started
 
@@ -18,16 +19,14 @@ This folder contains the **frontend** application for the Sky Atmosphere Analyze
 ### Installation
 
 ```bash
-# from the client directory
-npm install     # or yarn
+cd client
+npm install
 ```
 
 ### Development
 
-Run the dev server with hot reload:
-
 ```bash
-npm run dev     # or yarn dev
+npm run dev
 ```
 
 Open `http://localhost:5173` in your browser.
@@ -37,30 +36,54 @@ Open `http://localhost:5173` in your browser.
 To produce a production build:
 
 ```bash
-npm run build   # or yarn build
+npm run build
 ```
 
 The output will live in `dist/`.
 
-### Preview
+### Docker
 
-You can preview the production build locally:
+To build and serve with nginx:
+
+```bash
+npm run build
+docker build -t sky-analyzer-client .
+docker run -p 8080:80 sky-analyzer-client
+```
+
+### Preview
 
 ```bash
 npm run preview
 ```
+
+## API Endpoints
+
+The frontend communicates with these backend endpoints:
+
+- `POST /api/v1/analyze` – Upload and analyze sky images
+- `GET /api/v1/results` – Get paginated analysis results
 
 ## Project Structure
 
 - `src/` – source code
   - `components/` – reusable UI components
   - `routes/` – page-level components
-  - `src/services/api.ts` – HTTP clients for backend
+  - `services/api.ts` – HTTP clients for backend
   - `lib/` – utility modules
 - `public/` – static assets
 - `vite.config.ts` – Vite configuration
 
+## Running with Docker Compose
+
+To run the full stack (frontend + backend), use Docker Compose from the project root:
+
+```bash
+docker-compose up --build
+```
+
+This starts the frontend on `http://localhost:80` and the backend on `http://localhost:8000`.
+
 ## Notes
 
 This frontend pairs with the server located in `../server`. Ensure the backend is running to make API requests.
-
